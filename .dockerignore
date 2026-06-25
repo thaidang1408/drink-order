@@ -1,0 +1,11 @@
+node_modules
+frontend/node_modules
+frontend/dist
+.git
+.env
+.env.*
+!.env.example
+*.md
+terminals
+.cursor
+agent-transcripts

@@ -1,0 +1,212 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Auth ───────────────────────────────────────────────────────────────────
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      UserRole @default(OWNER)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  stores Store[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  OWNER
+  STAFF
+}
+
+// ─── Store ──────────────────────────────────────────────────────────────────
+
+model Store {
+  id              String   @id @default(cuid())
+  name            String
+  slug            String   @unique
+  description     String?  @db.Text
+  logo            String?
+  bankQrImage     String?  @map("bank_qr_image")
+  bankName        String?  @map("bank_name")
+  bankAccountNo   String?  @map("bank_account_no")
+  bankAccountName String?  @map("bank_account_name")
+  tableCount      Int      @default(0) @map("table_count")
+  isActive        Boolean  @default(true) @map("is_active")
+  ownerId         String   @map("owner_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  owner        User                 @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  categories   Category[]
+  products     Product[]
+  orders       Order[]
+  optionGroups ProductOptionGroup[]
+
+  @@index([ownerId])
+  @@map("stores")
+}
+
+// ─── Category ───────────────────────────────────────────────────────────────
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String
+  sortOrder Int      @default(0) @map("sort_order")
+  isActive  Boolean  @default(true) @map("is_active")
+  storeId   String   @map("store_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  store    Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  products Product[]
+
+  @@index([storeId])
+  @@map("categories")
+}
+
+// ─── Product ────────────────────────────────────────────────────────────────
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String?  @db.Text
+  price       Decimal  @db.Decimal(10, 2)
+  image       String?
+  hasOptions   Boolean  @default(false) @map("has_options")
+  isBestSeller Boolean  @default(false) @map("is_best_seller")
+  isActive     Boolean  @default(true) @map("is_active")
+  sortOrder   Int      @default(0) @map("sort_order")
+  storeId     String   @map("store_id")
+  categoryId  String   @map("category_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  store              Store                     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  category           Category                  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  orderItems         OrderItem[]
+  optionAssignments  ProductOptionAssignment[]
+
+  @@index([storeId])
+  @@index([categoryId])
+  @@map("products")
+}
+
+// ─── Drink Options ──────────────────────────────────────────────────────────
+
+enum OptionGroupType {
+  SINGLE
+  MULTIPLE
+}
+
+model ProductOptionGroup {
+  id        String          @id @default(cuid())
+  name      String
+  type      OptionGroupType @default(SINGLE)
+  required  Boolean         @default(true)
+  sortOrder Int             @default(0) @map("sort_order")
+  isActive  Boolean         @default(true) @map("is_active")
+  storeId   String          @map("store_id")
+  createdAt DateTime        @default(now()) @map("created_at")
+  updatedAt DateTime        @updatedAt @map("updated_at")
+
+  store       Store                     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  options     ProductOption[]
+  assignments ProductOptionAssignment[]
+
+  @@index([storeId])
+  @@map("product_option_groups")
+}
+
+model ProductOption {
+  id          String   @id @default(cuid())
+  name        String
+  priceAdjust Decimal  @default(0) @map("price_adjust") @db.Decimal(10, 2)
+  isDefault   Boolean  @default(false) @map("is_default")
+  sortOrder   Int      @default(0) @map("sort_order")
+  isActive    Boolean  @default(true) @map("is_active")
+  groupId     String   @map("group_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  group ProductOptionGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([groupId])
+  @@map("product_options")
+}
+
+model ProductOptionAssignment {
+  productId String @map("product_id")
+  groupId   String @map("group_id")
+
+  product Product            @relation(fields: [productId], references: [id], onDelete: Cascade)
+  group   ProductOptionGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@id([productId, groupId])
+  @@map("product_option_assignments")
+}
+
+// ─── Order ──────────────────────────────────────────────────────────────────
+
+model Order {
+  id            String        @id @default(cuid())
+  orderNumber   String        @unique @map("order_number")
+  status        OrderStatus   @default(PENDING)
+  paymentMethod PaymentMethod @default(CASH) @map("payment_method")
+  tableNumber   String?       @map("table_number")
+  note          String?       @db.Text
+  totalAmount   Decimal       @map("total_amount") @db.Decimal(10, 2)
+  storeId       String        @map("store_id")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  store Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  items OrderItem[]
+
+  @@index([storeId])
+  @@index([status])
+  @@map("orders")
+}
+
+model OrderItem {
+  id           String  @id @default(cuid())
+  quantity     Int
+  unitPrice    Decimal @map("unit_price") @db.Decimal(10, 2)
+  subtotal     Decimal @db.Decimal(10, 2)
+  optionsJson  String? @map("options_json") @db.Text
+  optionsLabel String? @map("options_label") @db.Text
+  orderId      String  @map("order_id")
+  productId    String  @map("product_id")
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+}
