@@ -1,0 +1,11 @@
+[phases.install]
+cmds = [
+  "npm ci --no-audit --no-fund",
+  "npm ci --prefix frontend --no-audit --no-fund"
+]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "npx prisma migrate deploy && npm start"
