@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { Home } from './pages/Home';
 import { StoreMenu } from './pages/StoreMenu';
 import { Cart } from './pages/Cart';
@@ -17,8 +18,9 @@ import { QRDownload } from './pages/admin/QRDownload';
 import { ProtectedRoute } from './components/admin/ProtectedRoute';
 
 const App = () => (
-  <BrowserRouter>
-    <Routes>
+  <ErrorBoundary>
+    <BrowserRouter>
+      <Routes>
       {/* Customer */}
       <Route path="/" element={<Home />} />
       <Route path="/store/:slug" element={<StoreMenu />} />
@@ -95,8 +97,9 @@ const App = () => (
       />
 
       <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
-  </BrowserRouter>
+      </Routes>
+    </BrowserRouter>
+  </ErrorBoundary>
 );
 
 export default App;

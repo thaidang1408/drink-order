@@ -8,13 +8,17 @@ export const Home = () => (
       </div>
       <h1 className="mt-4 text-xl font-bold text-ink">Đặt món bằng QR</h1>
       <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-        Quét mã QR trên bàn tại quán để xem thực đơn và đặt món trực tiếp từ điện thoại.
+        Khách hàng: quét mã QR trên bàn để vào thực đơn và đặt món.
+      </p>
+      <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-800">
+        Nếu bạn thấy trang này sau khi quét QR, mã QR có thể chưa trỏ đúng link
+        <span className="font-semibold"> /store/ten-quan</span>. Vào admin tải lại mã QR.
       </p>
       <Link
         to="/admin/login"
-        className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-ink py-3 text-sm font-semibold text-white"
+        className="mt-6 inline-flex text-sm font-medium text-ink-muted hover:text-ink"
       >
-        Đăng nhập quản lý
+        Đăng nhập quản lý →
       </Link>
     </div>
   </div>

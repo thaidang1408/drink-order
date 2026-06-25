@@ -17,6 +17,7 @@
     "build": "npm run db:generate && npm run build --prefix frontend",
     "build:frontend": "npm run build --prefix frontend",
     "start:prod": "node src/server.js",
+    "postinstall": "npm install --prefix frontend",
     "deploy:docker": "powershell -ExecutionPolicy Bypass -File scripts/deploy-docker.ps1",
     "deploy:local": "powershell -ExecutionPolicy Bypass -File scripts/deploy-local.ps1",
     "deploy:wifi": "powershell -ExecutionPolicy Bypass -File scripts/deploy-wifi.ps1",
@@ -43,11 +44,11 @@
     "multer": "2.2.0",
     "qrcode": "1.5.4",
     "socket.io": "^4.8.1",
-    "zod": "4.4.3"
+    "zod": "4.4.3",
+    "prisma": "^6.9.0"
   },
   "devDependencies": {
-    "kill-port": "2.0.1",
-    "prisma": "^6.9.0"
+    "kill-port": "2.0.1"
   },
   "prisma": {
     "seed": "node prisma/seed.js"

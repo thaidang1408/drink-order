@@ -9,7 +9,7 @@ const env = {
   databaseUrl: process.env.DATABASE_URL,
   corsOrigin: process.env.CORS_ORIGIN || '*',
   socketCorsOrigin: process.env.SOCKET_CORS_ORIGIN || '*',
-  frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
+  frontendUrl: (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/+$/, ''),
   jwtSecret: process.env.JWT_SECRET || 'dev-jwt-secret-change-me',
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
   cloudinary: {

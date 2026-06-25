@@ -56,7 +56,8 @@ export const downloadAdminQR = async (storeId, { table, slug, label }) => {
   }
 
   if (!response.ok) {
-    throw new Error('Không thể tải mã QR');
+    const message = await response.text().catch(() => '');
+    throw new Error(message || 'Không thể tải mã QR');
   }
 
   const blob = await response.blob();

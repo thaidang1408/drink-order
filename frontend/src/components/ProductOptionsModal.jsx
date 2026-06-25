@@ -10,25 +10,27 @@ import { ProductImage } from './ProductCard';
 export const ProductOptionsModal = ({ product, open, onClose, onConfirm }) => {
   const [selections, setSelections] = useState([]);
 
-  const optionGroups = product?.optionGroups ?? [];
+  const optionGroups = product?.optionGroups;
 
   useEffect(() => {
-    if (open && product) {
+    if (open && product && optionGroups) {
       setSelections(getDefaultSelections(optionGroups));
     }
   }, [open, product, optionGroups]);
 
   const unitPrice = useMemo(
-    () => (product ? computeUnitPrice(product.price, optionGroups, selections) : 0),
+    () => (product && optionGroups ? computeUnitPrice(product.price, optionGroups, selections) : 0),
     [product, optionGroups, selections],
   );
 
   const optionsLabel = useMemo(
-    () => buildOptionsLabel(optionGroups, selections),
+    () => (optionGroups ? buildOptionsLabel(optionGroups, selections) : ''),
     [optionGroups, selections],
   );
 
   if (!open || !product) return null;
+
+  const groups = optionGroups ?? [];
 
   const isSelected = (groupId, optionId) =>
     selections.some((s) => s.groupId === groupId && s.optionId === optionId);
@@ -51,7 +53,7 @@ export const ProductOptionsModal = ({ product, open, onClose, onConfirm }) => {
   };
 
   const handleConfirm = () => {
-    for (const group of optionGroups) {
+    for (const group of groups) {
       if (!group.required) continue;
       const hasPick = selections.some((s) => s.groupId === group.id);
       if (!hasPick) return;
@@ -94,7 +96,7 @@ export const ProductOptionsModal = ({ product, open, onClose, onConfirm }) => {
         </div>
 
         <div className="space-y-5">
-          {optionGroups.map((group) => (
+          {groups.map((group) => (
             <div key={group.id}>
               <div className="mb-2 flex items-center gap-2">
                 <h3 className="text-sm font-semibold text-ink">{group.name}</h3>

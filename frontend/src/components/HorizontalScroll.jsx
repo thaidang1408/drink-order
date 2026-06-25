@@ -8,10 +8,13 @@ export const HorizontalScroll = ({
   hideArrowsOnMobile = true,
 }) => {
   const scrollRef = useRef(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [thumbWidth, setThumbWidth] = useState(100);
+  const frameRef = useRef(0);
+  const [scrollState, setScrollState] = useState({
+    canScrollLeft: false,
+    canScrollRight: false,
+    progress: 0,
+    thumbWidth: 100,
+  });
 
   const updateScrollState = useCallback(() => {
     const el = scrollRef.current;
@@ -20,29 +23,42 @@ export const HorizontalScroll = ({
     const { scrollLeft, scrollWidth, clientWidth } = el;
     const maxScroll = scrollWidth - clientWidth;
 
-    setCanScrollLeft(scrollLeft > 4);
-    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 4);
+    const next = {
+      canScrollLeft: scrollLeft > 4,
+      canScrollRight: scrollLeft + clientWidth < scrollWidth - 4,
+      progress: maxScroll > 0 ? scrollLeft / maxScroll : 0,
+      thumbWidth: maxScroll > 0 ? Math.max(28, (clientWidth / scrollWidth) * 100) : 100,
+    };
 
-    if (maxScroll > 0) {
-      setProgress(scrollLeft / maxScroll);
-      setThumbWidth(Math.max(28, (clientWidth / scrollWidth) * 100));
-    } else {
-      setProgress(0);
-      setThumbWidth(100);
-    }
+    setScrollState((prev) => {
+      if (
+        prev.canScrollLeft === next.canScrollLeft &&
+        prev.canScrollRight === next.canScrollRight &&
+        Math.abs(prev.progress - next.progress) < 0.001 &&
+        Math.abs(prev.thumbWidth - next.thumbWidth) < 0.1
+      ) {
+        return prev;
+      }
+      return next;
+    });
   }, []);
 
+  const scheduleUpdate = useCallback(() => {
+    cancelAnimationFrame(frameRef.current);
+    frameRef.current = requestAnimationFrame(updateScrollState);
+  }, [updateScrollState]);
+
   useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
+    scheduleUpdate();
+    const t1 = window.setTimeout(scheduleUpdate, 150);
+    const t2 = window.setTimeout(scheduleUpdate, 600);
 
-    updateScrollState();
-
-    const observer = new ResizeObserver(updateScrollState);
-    observer.observe(el);
-
-    return () => observer.disconnect();
-  }, [updateScrollState, children]);
+    return () => {
+      cancelAnimationFrame(frameRef.current);
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+    };
+  }, [scheduleUpdate]);
 
   const scrollBy = (direction) => {
     scrollRef.current?.scrollBy({
@@ -55,6 +71,7 @@ export const HorizontalScroll = ({
     ? 'absolute top-1/2 z-20 hidden -translate-y-1/2 sm:flex'
     : 'absolute top-1/2 z-20 flex -translate-y-1/2';
 
+  const { canScrollLeft, canScrollRight, progress, thumbWidth } = scrollState;
   const hasOverflow = canScrollLeft || canScrollRight;
 
   return (
@@ -91,13 +108,17 @@ export const HorizontalScroll = ({
         </>
       )}
 
-      <div ref={scrollRef} onScroll={updateScrollState} className="horizontal-scroll">
+      <div ref={scrollRef} onScroll={scheduleUpdate} className="horizontal-scroll">
         {children}
         <div className="w-1 shrink-0" aria-hidden />
       </div>
 
-      {showProgress && hasOverflow && (
-        <div className="mx-auto mt-3 h-1 max-w-[4.5rem] overflow-hidden rounded-full bg-slate-100">
+      {showProgress && (
+        <div
+          className={`mx-auto mt-3 h-1 max-w-[4.5rem] overflow-hidden rounded-full bg-slate-100 transition-opacity ${
+            hasOverflow ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
           <div
             className="h-full rounded-full bg-brand-500/70 transition-[margin,width] duration-150 ease-out"
             style={{

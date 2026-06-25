@@ -1,8 +1,10 @@
 import QRCode from 'qrcode';
 import env from '../../config/env.js';
 
+const normalizeBaseUrl = (url) => String(url || '').trim().replace(/\/+$/, '');
+
 export const buildStoreMenuUrl = (slug, table) => {
-  const base = `${env.frontendUrl}/store/${slug}`;
+  const base = `${normalizeBaseUrl(env.frontendUrl)}/store/${slug}`;
   const tableValue = table != null ? String(table).trim() : '';
 
   if (tableValue) {
@@ -18,6 +20,7 @@ export const generateStoreQRDataUrl = async (slug, table) => {
   const dataUrl = await QRCode.toDataURL(menuUrl, {
     width: 512,
     margin: 2,
+    errorCorrectionLevel: 'H',
     color: { dark: '#1c1917', light: '#ffffff' },
   });
 
@@ -31,6 +34,7 @@ export const generateStoreQRBuffer = async (slug, table) => {
     type: 'png',
     width: 512,
     margin: 2,
+    errorCorrectionLevel: 'H',
     color: { dark: '#1c1917', light: '#ffffff' },
   });
 

@@ -10,7 +10,14 @@ const formatZodError = (error) =>
 export const validate = (schema, source = 'body') => (req, _res, next) => {
   try {
     const parsed = schema.parse(req[source]);
-    req[source] = parsed;
+
+    if (source === 'query') {
+      // Express 5: req.query is read-only — store parsed values separately
+      req.validatedQuery = parsed;
+    } else {
+      req[source] = parsed;
+    }
+
     next();
   } catch (error) {
     if (error instanceof ZodError) {

@@ -52,12 +52,12 @@ storeRouter.put(
 );
 storeRouter.get('/stats', orderController.getStats);
 storeRouter.get('/qr/batch', storeController.getAdminQRBatch);
-storeRouter.get('/qr', validate(tableQuerySchema, 'query'), storeController.getAdminQR);
 storeRouter.get(
   '/qr/download',
   validate(tableQuerySchema, 'query'),
   storeController.downloadAdminQR,
 );
+storeRouter.get('/qr', validate(tableQuerySchema, 'query'), storeController.getAdminQR);
 storeRouter.get('/payment-settings', storeController.getPaymentSettings);
 storeRouter.put(
   '/payment-settings',

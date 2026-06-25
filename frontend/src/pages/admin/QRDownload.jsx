@@ -36,15 +36,27 @@ export const QRDownload = () => {
   const handleDownload = async (item) => {
     if (!store?.id) return;
 
+    const slug = batch?.store?.slug || store.slug;
+    const suffix = item.table ? `-ban-${item.table}` : '';
+    const filename = `qr-${slug}${suffix}.png`;
+
     try {
       setDownloading(item.table ?? 'general');
+      setError('');
       await downloadAdminQR(store.id, {
         table: item.table,
-        slug: batch?.store?.slug || store.slug,
+        slug,
         label: item.label,
       });
-    } catch (err) {
-      setError(err.message);
+    } catch {
+      if (item.dataUrl) {
+        const link = document.createElement('a');
+        link.href = item.dataUrl;
+        link.download = filename;
+        link.click();
+        return;
+      }
+      setError('Không thể tải mã QR');
     } finally {
       setDownloading(null);
     }

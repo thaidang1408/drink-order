@@ -19,8 +19,6 @@ export const StoreMenu = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [optionsProduct, setOptionsProduct] = useState(null);
-  const initStore = useCartStore((state) => state.initStore);
-  const setTableNumber = useCartStore((state) => state.setTableNumber);
   const addItem = useCartStore((state) => state.addItem);
 
   const handleAddProduct = (product) => {
@@ -32,12 +30,17 @@ export const StoreMenu = () => {
   };
 
   useEffect(() => {
+    let cancelled = false;
+
     const loadMenu = async () => {
       try {
         setLoading(true);
         setError(null);
         const response = await fetchStoreMenu(slug);
+        if (cancelled) return;
+
         setMenu(response.data);
+        const { initStore, setTableNumber } = useCartStore.getState();
         initStore(response.data.store, {
           tableNumber: tableFromUrl || undefined,
           tableLocked: Boolean(tableFromUrl),
@@ -47,14 +50,22 @@ export const StoreMenu = () => {
         }
         setActiveCategory(response.data.categories[0]?.id ?? null);
       } catch (err) {
-        setError(err.message || 'Không thể tải thực đơn');
+        if (!cancelled) {
+          setError(err.message || 'Không thể tải thực đơn');
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
     loadMenu();
-  }, [slug, initStore, setTableNumber, tableFromUrl]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [slug, tableFromUrl]);
 
   if (loading) {
     return (

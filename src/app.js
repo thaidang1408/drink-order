@@ -14,8 +14,32 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const createApp = () => {
   const app = express();
 
+  // Fix //store/... URLs (from trailing slash in FRONTEND_URL) so SPA routes match
+  app.use((req, res, next) => {
+    const [pathname, ...rest] = req.originalUrl.split('?');
+    const query = rest.length ? `?${rest.join('?')}` : '';
+    const normalizedPath = pathname.replace(/\/{2,}/g, '/');
+
+    if (normalizedPath !== pathname) {
+      res.redirect(301, `${normalizedPath}${query}`);
+      return;
+    }
+
+    next();
+  });
+
   app.use(helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' },
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+        imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+        connectSrc: ["'self'", 'wss:', 'ws:'],
+      },
+    },
   }));
   app.use(cors(appConfig.cors));
   app.use(morgan(appConfig.nodeEnv === 'development' ? 'dev' : 'combined'));

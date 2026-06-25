@@ -4,6 +4,8 @@ import { useRecentOrderStore } from '../stores/recentOrderStore';
 import { ORDER_STATUS_LABELS } from '../utils/constants';
 import { formatCurrency } from '../utils/format';
 
+const EMPTY_ORDERS = [];
+
 export const Layout = ({
   children,
   slug,
@@ -16,7 +18,7 @@ export const Layout = ({
 }) => {
   const itemCount = useCartStore((state) => state.getItemCount());
   const orders = useRecentOrderStore((state) =>
-    slug ? state.ordersByStore[slug] ?? [] : [],
+    slug ? state.ordersByStore[slug] ?? EMPTY_ORDERS : EMPTY_ORDERS,
   );
   const activeOrders = orders.filter(
     (o) => !['COMPLETED', 'CANCELLED'].includes(o.status),
