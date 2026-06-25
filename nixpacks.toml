@@ -5,7 +5,7 @@ cmds = [
 ]
 
 [phases.build]
-cmds = ["npm run build"]
+cmds = ["DATABASE_URL=mysql://build:build@127.0.0.1:3306/build npm run build"]
 
 [start]
 cmd = "npx prisma migrate deploy && npm start"
